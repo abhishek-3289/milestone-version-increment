@@ -1,0 +1,58 @@
+name: Milestone Version Increment
+description: Increment the latest tag and create milestone using semver
+author: Abhishek Bansal
+
+branding:
+  icon: tag
+  color: blue
+
+inputs:
+  increment-type:
+    description: Provide increment type [patch, minor, major]
+    required: false
+    default: patch
+  increment:
+    description: Provide increment value
+    required: false
+    default: '1'
+  prefix:
+    description: Provide prefix used for milestone title
+    required: false
+    default: ''
+  due-date:
+    description: Provide due date for milestone
+    required: false
+  description:
+    description: Provide description for milestone
+    default: ''
+    required: false
+
+outputs:
+  title:
+    description: Title of milestone with prefix
+    value: ${{ steps.title.outputs.milestone_title }}
+  version:
+    description: Version of milestone
+    value: ${{ steps.title.outputs.milestone_version }}
+  number:
+    description: Number of milestone
+    value: ${{ steps.milestone.outputs.number }}
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch tag and create milestone title
+      id: title
+      run: ${{ github.action_path }}/version_script.sh ${{ inputs.increment-type }} ${{ inputs.increment }} ${{ inputs.prefix }}
+      shell: bash
+
+    - name: Create Milestone
+      id: milestone
+      uses: oinume/create-scheduled-milestone-action@v1.0.2
+      with:
+        title: ${{ steps.title.outputs.milestone_title }}
+        state: "open"
+        due_on: ${{ inputs.due-date }}
+        description: ${{ inputs.description }}
+      env:
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN  }}
