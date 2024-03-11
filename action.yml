@@ -57,7 +57,7 @@ runs:
         INC=${{ inputs.due-day-increment }}
         DUE_ON=${{ inputs.due-date }}
         if [[ $INC != '' ]]; then
-          DUE_ON=$(date --iso-8601=seconds -d '+$INC days')
+          DUE_ON=$(date --iso-8601=seconds -d "+$INC days")
         fi
         echo milestone_due="$DUE_ON" >> "$GITHUB_OUTPUT"
       shell: bash
