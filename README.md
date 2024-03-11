@@ -12,11 +12,12 @@
 
       - name: Update version
         id: milestone
-        uses: abhishek-3289/milestone-version-increment@v1
+        uses: abhishek-3289/milestone-version-increment@v1.1.0
         with:
           increment-type: minor
           prefix: v
           increment: 2
+          due-day-increment: 3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
           
@@ -35,13 +36,14 @@ then can create a milestone with given prefix plus semver, description and due d
 
 ### Inputs 📥
 
-| name           | description                                                                                               | required | default |
-|:---------------|:----------------------------------------------------------------------------------------------------------| :---     |:--------|
-| increment-type | The digit to increment, either `major`, `minor` or `patch`.                                               | No       | `patch` |
-| increment      | The value to add into `increment-type`                                                                    | No       | `1`     |
-| prefix         | The prifix for milestone title eg: `v<semver>`                                                            | No       | ❌       |
-| due-date       | This is a timestamp in [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format: `YYYY-MM-DDTHH:MM:SSZ`. | No       | ❌       |
-| description    | The description for the milestone.                                                                        | No       | ❌       |
+| name                | description                                                                                              | required  | default  |
+|:--------------------|:---------------------------------------------------------------------------------------------------------|:----------|:---------|
+| increment-type      | The digit to increment, either `major`, `minor` or `patch`.                                              | No        | `patch`  |
+| increment           | The value to add into `increment-type`                                                                   | No        | `1`      |
+| prefix              | The prifix for milestone title eg: `v<semver>`                                                           | No        | ❌        |
+| due-date            | This is a timestamp in [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format: `YYYY-MM-DDTHH:MM:SSZ` | No        | ❌        |
+| description         | The description for the milestone.                                                                       | No        | ❌        |
+| due-day-increment   | The number of days to add in current day for due date.                                                   | No        | ❌        |
 
 ### Outputs 
 
