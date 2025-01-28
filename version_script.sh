@@ -5,8 +5,7 @@ INCREMENT=${2:-"1"}
 PREFIX=${3:-""}
 
 # Fetch latest tag, fallback to v0.0.0 if doesn't exist
-git fetch --prune --unshallow 2>/dev/null
-CURRENT_VERSION=$(git describe --abbrev=0 --tags 2>/dev/null)
+CURRENT_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
 
 if [[ $CURRENT_VERSION == '' ]]
 then
