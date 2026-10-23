@@ -13,7 +13,7 @@
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Update version
         id: milestone
