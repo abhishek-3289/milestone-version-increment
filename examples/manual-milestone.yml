@@ -1,0 +1,48 @@
+name: Create milestone
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment-type:
+        description: Part of the version to increment
+        type: choice
+        options: [patch, minor, major]
+        default: minor
+      due-date:
+        description: Due date in ISO 8601 (YYYY-MM-DDTHH:MM:SSZ); leave empty for none
+        required: false
+        default: ''
+      description:
+        description: Milestone description
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create milestone
+        id: milestone
+        uses: abhishek-3289/milestone-version-increment@v1
+        with:
+          increment-type: ${{ inputs.increment-type }}
+          prefix: Release v
+          due-date: ${{ inputs.due-date }}
+          description: ${{ inputs.description }}
+
+      - name: Print milestone details
+        env:
+          TITLE: ${{ steps.milestone.outputs.title }}
+          VERSION: ${{ steps.milestone.outputs.version }}
+          NUMBER: ${{ steps.milestone.outputs.number }}
+        run: |
+          echo "title=$TITLE"
+          echo "version=$VERSION"
+          echo "number=$NUMBER"

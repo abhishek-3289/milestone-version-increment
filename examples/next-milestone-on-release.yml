@@ -1,0 +1,31 @@
+name: Create next milestone
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  next-milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create milestone for next minor version
+        id: milestone
+        uses: abhishek-3289/milestone-version-increment@v1
+        with:
+          increment-type: minor
+          prefix: v
+          due-day-increment: 14
+          description: Work planned for the release after ${{ github.event.release.tag_name }}
+
+      - name: Summary
+        env:
+          TITLE: ${{ steps.milestone.outputs.title }}
+          NUMBER: ${{ steps.milestone.outputs.number }}
+        run: echo "Created milestone [$TITLE]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/milestone/$NUMBER)" >> "$GITHUB_STEP_SUMMARY"
