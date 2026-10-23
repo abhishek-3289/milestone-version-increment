@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment-type:
+        description: Part of the version to increment
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Tag and publish release
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Calculate next version
+        id: version
+        env:
+          INCREMENT_TYPE: ${{ inputs.increment-type }}
+        run: ./version_script.sh "$INCREMENT_TYPE" 1 v
+
+      - name: Create release
+        env:
+          TAG: ${{ steps.version.outputs.milestone_title }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
+
+      - name: Move major version tag
+        env:
+          VERSION: ${{ steps.version.outputs.milestone_version }}
+        run: |
+          MAJOR_TAG="v${VERSION%%.*}"
+          git tag -f "$MAJOR_TAG" "$GITHUB_SHA"
+          git push -f origin "refs/tags/$MAJOR_TAG"
+          echo "Released v$VERSION and moved $MAJOR_TAG" >> "$GITHUB_STEP_SUMMARY"

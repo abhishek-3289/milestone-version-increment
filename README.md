@@ -17,7 +17,7 @@
 
       - name: Update version
         id: milestone
-        uses: abhishek-3289/milestone-version-increment@v1.2.0
+        uses: abhishek-3289/milestone-version-increment@v1
         with:
           increment-type: minor
           prefix: v
@@ -60,3 +60,25 @@ Setting `GITHUB_TOKEN` in `env` (as in earlier versions) still works and takes p
 1. **title** :- The title of created milestone formed using prefix and semver.
 2. **version** :- The semver used for milestone title.
 3. **number** :- The number of created milestone.
+
+## Examples 🧪
+
+Ready-to-copy workflows live in [`examples/`](examples):
+
+- [`next-milestone-on-release.yml`](examples/next-milestone-on-release.yml) creates the next minor milestone, due in 14 days, whenever a release is published.
+- [`manual-milestone.yml`](examples/manual-milestone.yml) creates a milestone on demand, choosing the increment type, due date and description when you run it.
+
+Copy one into `.github/workflows/` of your repository.
+
+## Development 🛠️
+
+```bash
+bash tests/version_script_test.sh
+```
+
+The tests create throwaway git repositories, so they need only `git` and `bash`.
+
+| Workflow | Trigger | What it does |
+|:---------|:--------|:-------------|
+| [CI](.github/workflows/ci.yml) | push to `main`, pull requests | ShellCheck, actionlint, unit tests on Ubuntu and macOS, and an integration run of the action that creates and then deletes a temporary milestone. |
+| [Release](.github/workflows/release.yml) | manual (`patch` / `minor` / `major`) | Runs CI, calculates the next version with this action's own script, publishes a GitHub release with generated notes, and moves the `vMAJOR` tag. |

@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: ShellCheck
+        run: shellcheck version_script.sh tests/*.sh
+
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color .github/workflows/*.yml examples/*.yml
+
+  unit-tests:
+    name: Unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run version script tests
+        run: bash tests/version_script_test.sh
+
+  integration:
+    name: Integration (creates and deletes a milestone)
+    needs: unit-tests
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run action
+        id: milestone
+        uses: ./
+        with:
+          increment-type: minor
+          prefix: ci-${{ github.run_id }}-${{ github.run_attempt }}-v
+          due-day-increment: 1
+          description: Temporary milestone created by CI run ${{ github.run_id }}
+
+      - name: Verify outputs
+        env:
+          TITLE: ${{ steps.milestone.outputs.title }}
+          VERSION: ${{ steps.milestone.outputs.version }}
+          NUMBER: ${{ steps.milestone.outputs.number }}
+          EXPECTED_PREFIX: ci-${{ github.run_id }}-${{ github.run_attempt }}-v
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ $VERSION =~ ^[0-9]+\.[0-9]+\.0$ ]] || { echo "::error::unexpected version '$VERSION'"; exit 1; }
+          [[ $TITLE == "$EXPECTED_PREFIX$VERSION" ]] || { echo "::error::unexpected title '$TITLE'"; exit 1; }
+          [[ $NUMBER =~ ^[0-9]+$ ]] || { echo "::error::unexpected number '$NUMBER'"; exit 1; }
+          REMOTE_TITLE=$(gh api "repos/$GITHUB_REPOSITORY/milestones/$NUMBER" --jq .title)
+          [[ $REMOTE_TITLE == "$TITLE" ]] || { echo "::error::milestone $NUMBER has title '$REMOTE_TITLE'"; exit 1; }
+          REMOTE_DUE=$(gh api "repos/$GITHUB_REPOSITORY/milestones/$NUMBER" --jq .due_on)
+          [[ -n $REMOTE_DUE && $REMOTE_DUE != null ]] || { echo "::error::milestone has no due date"; exit 1; }
+
+      - name: Delete test milestone
+        if: always() && steps.milestone.outputs.number != ''
+        env:
+          NUMBER: ${{ steps.milestone.outputs.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X DELETE "repos/$GITHUB_REPOSITORY/milestones/$NUMBER"
