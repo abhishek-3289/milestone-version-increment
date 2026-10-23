@@ -20,17 +20,21 @@ inputs:
     required: false
     default: ''
   due-date:
-    description: Provide due date for milestone
+    description: Provide due date for milestone in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ)
     required: false
     default: ''
   due-day-increment:
-    description: Provide number of days to add in current day for due date
+    description: Provide number of days to add in current day for due date; takes precedence over due-date
     required: false
     default: ''
   description:
     description: Provide description for milestone
-    default: ''
     required: false
+    default: ''
+  github-token:
+    description: Token used to create the milestone; needs issues write permission
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   title:
@@ -48,26 +52,37 @@ runs:
   steps:
     - name: Fetch tag and create milestone title
       id: title
-      run: ${{ github.action_path }}/version_script.sh ${{ inputs.increment-type }} ${{ inputs.increment }} ${{ inputs.prefix }}
       shell: bash
+      env:
+        INCREMENT_TYPE: ${{ inputs.increment-type }}
+        INCREMENT: ${{ inputs.increment }}
+        PREFIX: ${{ inputs.prefix }}
+      run: '"$GITHUB_ACTION_PATH/version_script.sh" "$INCREMENT_TYPE" "$INCREMENT" "$PREFIX"'
 
     - name: Milestone due date
       id: date
-      run: |
-        INC=${{ inputs.due-day-increment }}
-        DUE_ON=${{ inputs.due-date }}
-        if [[ $INC != '' ]]; then
-          DUE_ON=$(date --iso-8601=seconds -d "+$INC days")
-        fi
-        echo milestone_due="$DUE_ON" >> "$GITHUB_OUTPUT"
       shell: bash
+      env:
+        DUE_DATE: ${{ inputs.due-date }}
+        DUE_DAY_INCREMENT: ${{ inputs.due-day-increment }}
+      run: |
+        DUE_ON=$DUE_DATE
+        if [[ -n $DUE_DAY_INCREMENT ]]; then
+          if ! [[ $DUE_DAY_INCREMENT =~ ^[0-9]+$ ]]; then
+            echo "::error::due-day-increment must be a whole number of days, got '$DUE_DAY_INCREMENT'"
+            exit 1
+          fi
+          DUE_ON=$(date -u -d "+$DUE_DAY_INCREMENT days" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+            || date -u -v+"${DUE_DAY_INCREMENT}"d +%Y-%m-%dT%H:%M:%SZ)
+        fi
+        echo "milestone_due=$DUE_ON" >> "$GITHUB_OUTPUT"
 
     - name: Create Milestone
       id: milestone
-      uses: sv-tools/create-milestone-action@v1.5.0
+      uses: sv-tools/create-milestone-action@v2.0.0
       with:
-        token: ${{ env.GITHUB_TOKEN }}
+        token: ${{ env.GITHUB_TOKEN || inputs.github-token }}
         title: ${{ steps.title.outputs.milestone_title }}
-        state: "open"
+        state: open
         due_on: ${{ steps.date.outputs.milestone_due }}
         description: ${{ inputs.description }}
