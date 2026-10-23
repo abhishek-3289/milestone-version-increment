@@ -39,50 +39,11 @@ inputs:
 outputs:
   title:
     description: Title of milestone with prefix
-    value: ${{ steps.title.outputs.milestone_title }}
   version:
     description: Version of milestone
-    value: ${{ steps.title.outputs.milestone_version }}
   number:
     description: Number of milestone
-    value: ${{ steps.milestone.outputs.number }}
 
 runs:
-  using: composite
-  steps:
-    - name: Fetch tag and create milestone title
-      id: title
-      shell: bash
-      env:
-        INCREMENT_TYPE: ${{ inputs.increment-type }}
-        INCREMENT: ${{ inputs.increment }}
-        PREFIX: ${{ inputs.prefix }}
-      run: '"$GITHUB_ACTION_PATH/version_script.sh" "$INCREMENT_TYPE" "$INCREMENT" "$PREFIX"'
-
-    - name: Milestone due date
-      id: date
-      shell: bash
-      env:
-        DUE_DATE: ${{ inputs.due-date }}
-        DUE_DAY_INCREMENT: ${{ inputs.due-day-increment }}
-      run: |
-        DUE_ON=$DUE_DATE
-        if [[ -n $DUE_DAY_INCREMENT ]]; then
-          if ! [[ $DUE_DAY_INCREMENT =~ ^[0-9]+$ ]]; then
-            echo "::error::due-day-increment must be a whole number of days, got '$DUE_DAY_INCREMENT'"
-            exit 1
-          fi
-          DUE_ON=$(date -u -d "+$DUE_DAY_INCREMENT days" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
-            || date -u -v+"${DUE_DAY_INCREMENT}"d +%Y-%m-%dT%H:%M:%SZ)
-        fi
-        echo "milestone_due=$DUE_ON" >> "$GITHUB_OUTPUT"
-
-    - name: Create Milestone
-      id: milestone
-      uses: sv-tools/create-milestone-action@v2.0.0
-      with:
-        token: ${{ env.GITHUB_TOKEN || inputs.github-token }}
-        title: ${{ steps.title.outputs.milestone_title }}
-        state: open
-        due_on: ${{ steps.date.outputs.milestone_due }}
-        description: ${{ inputs.description }}
+  using: node24
+  main: src/index.js

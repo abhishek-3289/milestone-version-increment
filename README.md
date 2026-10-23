@@ -73,12 +73,12 @@ Copy one into `.github/workflows/` of your repository.
 ## Development 🛠️
 
 ```bash
-bash tests/version_script_test.sh
+npm test
 ```
 
-The tests create throwaway git repositories, so they need only `git` and `bash`.
+The action is plain Node 24 with no dependencies, so there is nothing to install. The tests create throwaway git repositories, so they need only `git` and Node.
 
 | Workflow | Trigger | What it does |
 |:---------|:--------|:-------------|
-| [CI](.github/workflows/ci.yml) | push to `main`, pull requests | ShellCheck, actionlint, unit tests on Ubuntu and macOS, and an integration run of the action that creates and then deletes a temporary milestone. |
-| [Release](.github/workflows/release.yml) | manual (`patch` / `minor` / `major`) | Runs CI, calculates the next version with this action's own script, publishes a GitHub release with generated notes, and moves the `vMAJOR` tag. |
+| [CI](.github/workflows/ci.yml) | push to `main`, pull requests | Syntax check, actionlint, unit tests on Ubuntu and macOS, and an integration run of the action that creates and then deletes a temporary milestone. |
+| [Release](.github/workflows/release.yml) | manual (`patch` / `minor` / `major`) | Runs CI, calculates the next version, publishes a GitHub release with generated notes, and moves the `vMAJOR` tag. |
