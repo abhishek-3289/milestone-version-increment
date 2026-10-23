@@ -1,4 +1,4 @@
-# Milestone Version Increment ➕
+# Semver Milestone Increment ➕
 
 [![My Skills](https://skillicons.dev/icons?i=githubactions,github&perline=3)](https://skillicons.dev)
 

@@ -1,4 +1,4 @@
-name: Milestone Version Increment
+name: Semver Milestone Increment
 description: Increment the latest tag and create milestone using semver
 author: Abhishek Bansal
 
