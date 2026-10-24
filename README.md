@@ -17,7 +17,7 @@
 
       - name: Update version
         id: milestone
-        uses: abhishek-3289/milestone-version-increment@v1.4.0
+        uses: appshipkit/milestone-version-increment@v1.4.0
         with:
           increment-type: minor
           prefix: v

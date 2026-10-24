@@ -30,7 +30,7 @@ jobs:
 
       - name: Create milestone
         id: milestone
-        uses: abhishek-3289/milestone-version-increment@v1
+        uses: appshipkit/milestone-version-increment@v1
         with:
           increment-type: ${{ inputs.increment-type }}
           prefix: Release v
